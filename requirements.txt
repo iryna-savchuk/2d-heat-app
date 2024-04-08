@@ -1,6 +1,7 @@
+numpy
+sklearn
+pickle
+matplotlib
 fastapi
 uvicorn
 torch
-numpy
-matplotlib
-pickle

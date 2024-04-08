@@ -10,7 +10,6 @@ from typing import List
 import torch
 import torch.nn as nn  # Import nn module from PyTorch
 import matplotlib.pyplot as plt
-import numpy as np
 import io
 import pickle
 
