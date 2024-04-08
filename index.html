@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,63 +20,72 @@
             min-height: 400px; /* Set a minimum height for the plot container */
             min-width: 600px;
         }
+        /* Custom CSS to adjust label font size */
+        .col-form-label {
+            font-size: 18px; /* Adjust the font size as needed */
+        }
     </style>
 </head>
+
 
 <body>
     <div class="container mt-5">
         <h1 class="text-center mb-4">Plotting Temperature Prediction</h1>
-        
-        <!-- Link to FastAPI /docs endpoint -->
-        <div class="container mt-3">
-            <div class="text-right">
-                <a href="/docs" class="btn btn-link" style="opacity: 0.7;" target="_blank"> See FastAPI Endpoints</a>
-            </div>
-        </div>
-
         <div class="row">
             <!-- Form column -->
             <div class="col-md-4">
-                <form id="predictionForm" class="mb-5">
+                <form id="predictionForm" class="mb-5" onsubmit="updateUrl()">
                     <div class="form-group row">
                         <label for="value1" class="col-sm-4 col-form-label">T_ambient:</label>
                         <div class="col-sm-8">
-                            <input type="float" class="form-control" id="value1" name="value1" value="25" required>
+                            <input type="float" class="form-control" id="value1" name="value1" value="25" min="10" max="35" required>
+                            <span id="value1Error" class="text-danger"></span> 
                         </div>
                     </div>
                     <div class="form-group row">
                         <label for="value2" class="col-sm-4 col-form-label">T_left:</label>
                         <div class="col-sm-8">
-                            <input type="float" class="form-control" id="value2" name="value2" value="100" required>
+                            <input type="float" class="form-control" id="value2" name="value2" value="100" min="45" max="155" required>
+                            <span id="value2Error" class="text-danger"></span> 
                         </div>
                     </div>
                     <div class="form-group row">
                         <label for="value3" class="col-sm-4 col-form-label">T_right:</label>
                         <div class="col-sm-8">
-                            <input type="float" class="form-control" id="value3" name="value3" value="50" required>
+                            <input type="float" class="form-control" id="value3" name="value3" value="50" min="45" max="155" required>
+                            <span id="value3Error" class="text-danger"></span> 
                         </div>
                     </div>
                     <div class="form-group row">
                         <label for="value4" class="col-sm-4 col-form-label">k:</label>
                         <div class="col-sm-8">
-                            <input type="float" class="form-control" id="value4" name="value4" value="0.01" required>
+                            <input type="float" class="form-control" id="value4" name="value4" value="0.1" min="0.05" max="0.25" required>
+                            <span id="value4Error" class="text-danger"></span> 
                         </div>
                     </div>
                     <div class="form-group row">
                         <label for="value5" class="col-sm-4 col-form-label">low_k:</label>
                         <div class="col-sm-8">
-                            <input type="float" class="form-control" id="value5" name="value5" value="0.003" required>
+                            <input type="float" class="form-control" id="value5" name="value5" value="0.003" min="0.0005" max="0.006" required>
+                            <span id="value5Error" class="text-danger"></span> 
                         </div>
                     </div>
                     <!-- Add input fields for other values as needed -->
 
                     <div class="form-group row">
-                        <div class="col-sm-10 offset-sm-4">
-                            <button type="submit" class="btn btn-primary">Plot Prediction</button>
+                        <div class="col-sm-10 offset-sm-5">
+                            <button type="submit" class="btn btn-primary" style="font-size: 17px;">Plot Prediction</button>
                         </div>
+
+                        <!-- Link to FastAPI /docs endpoint -->
+                        <div class="container mt-3 offset-sm-3">
+                            <div class="text-center">
+                                <a href="/docs" class="btn btn-link" target="_blank" style="text-decoration: underline;"> FastAPI Endpoints</a>
+                            </div>
+                        </div>  
                     </div>
                 </form>
-            </div>      
+            </div>    
             <!-- Plot column -->
             <div class="col-md-8">
                 <div id="plot"></div>
@@ -84,47 +94,111 @@
     </div>
 
 
-   <!-- Include any JavaScript code here -->
+
+   <!-- INCLUDE ANY JAVASCRIPT CODE HERE -->
     <script>
+
         // Function to handle form submission
         document.getElementById("predictionForm").addEventListener("submit", function(event) {
             event.preventDefault(); // Prevent default form submission
-            plot(); // Call the predict function
+            validateInputs(); // Call the validateInputs function
+            if (validateInputs()) {
+                plot(); // Call the plot function if validation succeeds
+            }
         });
 
+        function updateUrl() {
+            const form = document.getElementById("predictionForm");
+            const formData = new FormData(form);
+            const searchParams = new URLSearchParams(formData);
+            const url = window.location.href.split('?')[0] + '?' + searchParams.toString();
+            window.history.replaceState(null, null, url);
+        }
+    
+        // Function to validate input values
+        function validateInputs() {
+
+            const value1 = parseFloat(document.getElementById("value1").value);
+            const value2 = parseFloat(document.getElementById("value2").value);
+            const value3 = parseFloat(document.getElementById("value3").value);
+            const value4 = parseFloat(document.getElementById("value4").value);
+            const value5 = parseFloat(document.getElementById("value5").value);
+            const value1Error = document.getElementById("value1Error");
+            const value2Error = document.getElementById("value2Error");
+            const value3Error = document.getElementById("value3Error");
+            const value4Error = document.getElementById("value4Error");
+            const value5Error = document.getElementById("value5Error");
+
+            if (value1 < 10 || value1 > 35) {
+                value1Error.textContent = "Please enter a value between 10 and 35";
+                return; // Stop further processing
+            } else {
+                value1Error.textContent = ""; // Clear the error message
+            }
+
+            if (value2 < 45 || value2 > 155) {
+                value2Error.textContent = "Please enter a value between 45 and 155";
+                return false; // Return false to indicate validation failure
+            } else {
+                value2Error.textContent = ""; // Clear the error message
+            }
+
+            if (value3 < 45 || value3 > 155) {
+                value3Error.textContent = "Please enter a value between 45 and 155";
+                return false; // Return false to indicate validation failure
+            } else {
+                value3Error.textContent = ""; // Clear the error message
+            }
+
+            if (value4 < 0.05 || value4 > 0.25) {
+                value4Error.textContent = "Please enter a value between 0.05 and 0.25";
+                return false; // Return false to indicate validation failure
+            } else {
+                value4Error.textContent = ""; // Clear the error message
+            }
+
+            if (value5 < 0.0005 || value5 > 0.006) {
+                value5Error.textContent = "Please enter a value between 0.0005 and 0.006";
+                return false; // Return false to indicate validation failure
+            } else {
+                value5Error.textContent = ""; // Clear the error message
+            }
+
+            return true; // Return true to indicate validation success
+
+        }
+
+
         // Function to send prediction request to the server
-       // Function to send prediction request to the server
-    function plot() {
-        // Get input values from the form
-        const value1 = document.getElementById("value1").value;
-        const value2 = document.getElementById("value2").value;
-        const value3 = document.getElementById("value3").value;
-        const value4 = document.getElementById("value4").value;
-        const value5 = document.getElementById("value5").value;
+        function plot() {
+            // Get input values from the form
+            const value1 = document.getElementById("value1").value;
+            const value2 = document.getElementById("value2").value;
+            const value3 = document.getElementById("value3").value;
+            const value4 = document.getElementById("value4").value;
+            const value5 = document.getElementById("value5").value;
 
-        // Create a list of values
-        const values = [parseFloat(value1), parseFloat(value2), parseFloat(value3), parseFloat(value4), parseFloat(value5)];
+            // Create a list of values
+            const values = [parseFloat(value1), parseFloat(value2), parseFloat(value3), parseFloat(value4), parseFloat(value5)];
 
-        // Send AJAX request to the server
-        fetch('/plot/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(values) // Pass the list directly
-        })
-        .then(response => response.blob()) // Get the response as blob
-        .then(blob => {
-            // Create URL for the blob
-            const blobUrl = URL.createObjectURL(blob);
+            // Send AJAX request to the server
+            fetch('/plot/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(values) // Pass the list directly
+            })
+            .then(response => response.blob()) // Get the response as blob
+            .then(blob => {
+                // Create URL for the blob
+                const blobUrl = URL.createObjectURL(blob);
 
-            // Display the plot
-            document.getElementById("plot").innerHTML = `<img src="${blobUrl}" alt="Prediction Plot">`;
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
+                // Display the plot
+                document.getElementById("plot").innerHTML = `<img src="${blobUrl}" alt="Prediction Plot">`;
+            })
+            .catch(error => console.error('Error:', error));
+        }
     </script>
-
 </body>
 </html>

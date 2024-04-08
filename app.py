@@ -12,8 +12,9 @@ import torch.nn as nn  # Import nn module from PyTorch
 import matplotlib.pyplot as plt
 import numpy as np
 import io
+import pickle
 
-app = FastAPI(title="2D Heat Approximation")
+app = FastAPI()
 
 # Serve the static files directory containing the favicon.ico file
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -27,6 +28,7 @@ app.add_middleware(
     allow_methods=["POST"],
     allow_headers=["*"],
 )
+
 
 # Define your neural network architecture
 class MyModel(nn.Module):
@@ -51,15 +53,26 @@ model = MyModel()
 model.load_state_dict(torch.load('model.pth'))
 model.eval()
 
+# Load the scaler from the file
+with open('scaler.pkl', 'rb') as f:
+    scaler = pickle.load(f)
+
 # Function to perform inference
 def inference(values: List[float]) -> torch.Tensor:
     with torch.no_grad():
+        # Normalize input values
+        values_normalized = scaler.transform([values])  # Assuming values is a list of floats
+
         # Convert input values to tensor
-        input_tensor = torch.tensor(values, dtype=torch.float32)
+        input_tensor = torch.tensor(values_normalized, dtype=torch.float32)
 
         # Perform inference
         output_tensor = model(input_tensor.unsqueeze(0))
+   
+        # Optionally, inverse transform the output tensor if needed
+        # output_tensor = torch.tensor(scaler.inverse_transform(output_tensor), dtype=torch.float32)
     return output_tensor
+
 
 # Function to plot tensor and save as file
 def plot_tensor(tensor: torch.Tensor, filename: str):
@@ -69,7 +82,7 @@ def plot_tensor(tensor: torch.Tensor, filename: str):
     
     # Plot tensor
     fig, ax = plt.subplots()   # Create figure
-    img = ax.imshow(tensor_np, cmap='hot', origin='lower', vmin=20.0, vmax=140.0)
+    img = ax.imshow(tensor_np, cmap='hot', origin='lower', vmin=10.0, vmax=150.0)
     plt.colorbar(img, ax=ax, label='Temperature')
     plt.xlabel('Position (x)')
     plt.ylabel('Position (y)')
