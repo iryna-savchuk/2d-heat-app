@@ -1,7 +1,6 @@
-numpy
-sklearn
-pickle
-matplotlib
-fastapi
-uvicorn
-torch
+numpy==1.24.4
+scikit-learn==1.0.2
+matplotlib==3.7.1
+fastapi==0.109.0
+uvicorn==0.25.0
+torch==1.11.0
